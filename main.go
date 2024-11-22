@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"myRVCC/asm"
 	"myRVCC/logger"
-	"myRVCC/utils"
 	"os"
 )
 
@@ -46,16 +46,16 @@ func main() {
 		}
 	}
 	printNum(num, &is1st)
-	fmt.Println("	ret")
+	asm.Ret()
 	return
 }
 
 func printNum(num int, is1st *bool) {
 	if *is1st {
-		utils.PrintLine("	li a0,%d", num)
+		asm.Li(asm.REG_A0, num)
 		*is1st = false
 	} else {
-		utils.PrintLine("	addi a0,a0,%d", num)
+		asm.Addi(asm.REG_A0, asm.REG_A0, num)
 	}
 
 }
