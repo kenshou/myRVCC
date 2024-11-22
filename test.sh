@@ -1,0 +1,22 @@
+#!/bin/bash
+assert () {
+  # 程序运行的 期待值 为参数1
+    expected="$1"
+    # 输入值 为参数2
+    input="$2"
+    ./build/rvcc "$input" > build/tmp.s || exit
+    riscv64-unknown-elf-gcc -static build/tmp.s -o build/tmp
+    spike pk build/tmp
+
+    actual="$?"
+    if [ "$actual" = "$expected" ]; then
+      echo "$input => $actual: Pass"
+    else
+      echo "$input => $expected expected, but got $actual"
+      exit 1
+    fi
+}
+
+assert 0 0
+assert 42 42
+echo OK
