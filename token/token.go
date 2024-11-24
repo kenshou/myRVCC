@@ -19,6 +19,11 @@ const (
 	operator_begin
 	ADD //+
 	SUB //-
+	MUL //*
+	DIV // /
+
+	LPAREN //(
+	RPAREN //)
 	operator_end
 )
 
@@ -30,8 +35,12 @@ var tokens = [...]string{
 
 	INT: "INT",
 
-	ADD: "+",
-	SUB: "-",
+	ADD:    "+",
+	SUB:    "-",
+	MUL:    "*",
+	DIV:    "/",
+	LPAREN: "(",
+	RPAREN: ")",
 }
 
 func (tk TokenKind) String() string {

@@ -2,8 +2,10 @@ package main
 
 import (
 	"myRVCC/asm"
+	"myRVCC/code"
 	"myRVCC/lexer"
 	"myRVCC/logger"
+	"myRVCC/parser"
 	"myRVCC/token"
 	"os"
 	"strconv"
@@ -21,36 +23,17 @@ func main() {
 	asm.Globl("main")
 	asm.Label("main")
 	l := lexer.New(exp)
-	//处理第一个数字
-	tok := l.NextToken()
-	asm.Li(asm.REG_A0, getNumber(tok))
-	isNeg := false
-l_for:
-	for {
-		tok = l.NextToken()
-		switch tok.Kind {
-		case token.EOF:
-			break l_for //跳出整个循环
-		case token.ADD:
-			isNeg = false
-		case token.SUB:
-			isNeg = true
-		case token.INT:
-			num := getNumber(tok)
-			if isNeg {
-				num = -num
-			}
-			asm.Addi(asm.REG_A0, asm.REG_A0, num)
-		}
-	}
+	p := parser.New(l)
+	program := p.ParseProgram()
+	code.GenCode(program)
 	asm.Ret()
 	return
 }
-func getNumber(tok token.Token) int {
+func getNumber(tok token.Token) int64 {
 	if tok.Kind != token.INT {
 		logger.Panic("[%s] getNumber: token is not int", tok.Literal)
 	}
-	value, err := strconv.Atoi(tok.Literal)
+	value, err := strconv.ParseInt(tok.Literal, 10, 64)
 	if err != nil {
 		logger.Panic("[%s] getNumber: Atoi error", tok.Literal)
 	}
