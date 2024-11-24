@@ -28,3 +28,13 @@ func TestNextToken(t *testing.T) {
 		}
 	}
 }
+func TestError(t *testing.T) {
+	l := New("1 + s")
+	for {
+		t := l.NextToken()
+		logger.Info("%s %s", t.Kind, t.Literal)
+		if t.Kind == token.EOF {
+			break
+		}
+	}
+}

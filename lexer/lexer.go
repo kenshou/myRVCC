@@ -2,12 +2,15 @@ package lexer
 
 import (
 	"myRVCC/token"
+	"myRVCC/utils"
+	"os"
 	"strings"
 	"text/scanner"
 )
 
 type Lexer struct {
 	scanner.Scanner
+	code string
 }
 
 func New(input string) *Lexer {
@@ -15,7 +18,7 @@ func New(input string) *Lexer {
 	reader := strings.NewReader(input)
 	s := scanner.Scanner{}
 	s.Init(reader)
-	return &Lexer{s}
+	return &Lexer{s, input}
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -43,6 +46,8 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Kind = token.INT
 			return tok
 		}
+		l.Error(position, "unexpected character: %s", string(ch))
+		os.Exit(1)
 	}
 	l.Next()
 	return tok
@@ -51,6 +56,10 @@ func (l *Lexer) NextToken() token.Token {
 func (l *Lexer) readNumber() string {
 	l.Scanner.Scan()
 	return l.TokenText()
+}
+
+func (l *Lexer) Error(pos scanner.Position, format string, arg ...interface{}) {
+	utils.VErrorAt(l.code, pos, format, arg...)
 }
 
 func newToken(tokenKind token.TokenKind, ch rune, position scanner.Position) token.Token {
