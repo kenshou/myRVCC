@@ -13,10 +13,12 @@ const (
 	//运算符优先级等级
 	_ = iota
 	LOWEST
-	SUM     // + -
-	PRODUCT // * /
-	PREFIX  // -X or !X
-	CALL    // 函数调用,括号
+	EQUALS       // ==
+	LESS_GREATER // > or <
+	SUM          // + -
+	PRODUCT      // * /
+	PREFIX       // -X or !X
+	CALL         // 函数调用,括号
 )
 
 // tokenKind与运算符优先级等级的对应关系
@@ -26,6 +28,12 @@ var precedences = map[token.TokenKind]int{
 	token.MUL:    PRODUCT,
 	token.DIV:    PRODUCT,
 	token.LPAREN: CALL,
+	token.EQ:     EQUALS,
+	token.NEQ:    EQUALS,
+	token.LT:     LESS_GREATER,
+	token.LEQ:    LESS_GREATER,
+	token.GT:     LESS_GREATER,
+	token.GEQ:    LESS_GREATER,
 }
 
 type (
@@ -56,6 +64,12 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.SUB, p.parseInfixExpression)
 	p.registerInfix(token.MUL, p.parseInfixExpression)
 	p.registerInfix(token.DIV, p.parseInfixExpression)
+	p.registerInfix(token.EQ, p.parseInfixExpression)
+	p.registerInfix(token.NEQ, p.parseInfixExpression)
+	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.LEQ, p.parseInfixExpression)
+	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.GEQ, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()

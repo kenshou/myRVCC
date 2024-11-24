@@ -29,7 +29,7 @@ func TestNextToken(t *testing.T) {
 	}
 }
 func TestError(t *testing.T) {
-	l := New("1 + s")
+	l := New("1>2")
 	for {
 		t := l.NextToken()
 		logger.Info("%s %s", t.Kind, t.Literal)

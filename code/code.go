@@ -57,6 +57,22 @@ func genCodeInfixExpression(node *ast.InfixExpression) {
 		asm.Multi(asm.REG_A0, asm.REG_A0, asm.REG_A1)
 	case token.DIV:
 		asm.Div(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+	case token.EQ:
+		asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		asm.Seqz(asm.REG_A0, asm.REG_A0)
+	case token.NEQ:
+		asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		asm.Snez(asm.REG_A0, asm.REG_A0)
+	case token.LT:
+		asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+	case token.LEQ:
+		asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
+		asm.Xori(asm.REG_A0, asm.REG_A0, 1)
+	case token.GT:
+		asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
+	case token.GEQ:
+		asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		asm.Xori(asm.REG_A0, asm.REG_A0, 1)
 	default:
 		panic("unsupported operator")
 	}

@@ -22,8 +22,17 @@ const (
 	MUL //*
 	DIV // /
 
+	EQ  //==
+	NEQ //!=
+	LT  // <
+	LEQ // <=
+	GT  // >
+	GEQ // >=
+
 	LPAREN //(
 	RPAREN //)
+
+	ASSIGN //=
 	operator_end
 )
 
@@ -39,6 +48,14 @@ var tokens = [...]string{
 	SUB:    "-",
 	MUL:    "*",
 	DIV:    "/",
+	EQ:     "==",
+	NEQ:    "!=",
+	LT:     "<",
+	LEQ:    "<=",
+	GT:     ">",
+	GEQ:    ">=",
+	ASSIGN: "=",
+
 	LPAREN: "(",
 	RPAREN: ")",
 }

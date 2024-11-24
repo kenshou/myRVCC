@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"myRVCC/logger"
 	"myRVCC/token"
 	"myRVCC/utils"
 	"os"
@@ -45,6 +46,42 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LPAREN, ch, position)
 	case ')':
 		tok = newToken(token.RPAREN, ch, position)
+	case '=':
+		l.Next()
+		if l.Peek() == '=' {
+			tok.Literal = "=="
+			tok.Kind = token.EQ
+		} else {
+			tok = newToken(token.ASSIGN, ch, position)
+			return tok
+		}
+	case '!':
+		l.Next()
+		if l.Peek() == '=' {
+			tok.Literal = "!="
+			tok.Kind = token.NEQ
+		} else {
+			//todo
+			logger.Panic("[%s] unexpected character", ch)
+		}
+	case '>':
+		l.Next()
+		if l.Peek() == '=' {
+			tok.Literal = ">="
+			tok.Kind = token.GEQ
+		} else {
+			tok = newToken(token.GT, ch, position)
+			return tok
+		}
+	case '<':
+		l.Next()
+		if l.Peek() == '=' {
+			tok.Literal = "<="
+			tok.Kind = token.LEQ
+		} else {
+			tok = newToken(token.LT, ch, position)
+			return tok
+		}
 	case scanner.EOF:
 		tok.Kind = token.EOF
 		tok.Literal = ""

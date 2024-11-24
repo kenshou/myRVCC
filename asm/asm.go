@@ -37,6 +37,27 @@ func Neg(rd REGISTER, rs REGISTER) {
 	utils.PrintLine("	neg %s,%s", rd, rs)
 }
 
+func Xor(rd REGISTER, rs1 REGISTER, rs2 REGISTER) {
+	utils.PrintLine("	xor %s,%s,%s", rd, rs1, rs2)
+}
+func Xori(rd REGISTER, rs1 REGISTER, imm int64) {
+	utils.PrintLine(" xori %s, %s, %d", rd, rs1, imm)
+}
+
+// Seqz 等于0则置1
+func Seqz(rd REGISTER, rs1 REGISTER) {
+	utils.PrintLine("	seqz %s,%s", rd, rs1)
+}
+
+// Snez 不等于0则置1
+func Snez(rd REGISTER, rs1 REGISTER) {
+	utils.PrintLine("	snez %s,%s", rd, rs1)
+}
+
+// Slt 如果 rs1<rs2则 rd 置1，否则置0
+func Slt(rd REGISTER, rs1 REGISTER, rs2 REGISTER) {
+	utils.PrintLine("	slt %s,%s,%s", rd, rs1, rs2)
+}
 func Ret() {
 	utils.PrintLine("	ret")
 }
