@@ -15,6 +15,7 @@ const (
 	LOWEST
 	SUM     // + -
 	PRODUCT // * /
+	PREFIX  // -X or !X
 	CALL    // 函数调用,括号
 )
 
@@ -47,6 +48,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[token.TokenKind]prefixParseFn)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.LPAREN, p.parseGroupExpression)
+	p.registerPrefix(token.SUB, p.parsePrefixExpression)
+	p.registerPrefix(token.ADD, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[token.TokenKind]infixParseFn)
 	p.registerInfix(token.ADD, p.parseInfixExpression)
@@ -182,4 +185,14 @@ func (p *Parser) parseGroupExpression() ast.Expression {
 		return nil
 	}
 	return exp
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+	}
+	p.nextToken()
+	expression.Right = p.parseExpression(PREFIX)
+	return expression
 }

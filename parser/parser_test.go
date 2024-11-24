@@ -7,7 +7,7 @@ import (
 )
 
 func TestParserString(t *testing.T) {
-	input := "(1 + 2) * 3/4+2/3"
+	input := "-10+20"
 	p := New(lexer.New(input))
 	program := p.ParseProgram()
 	logger.Info(program.String())

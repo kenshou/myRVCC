@@ -12,12 +12,27 @@ func GenCode(node ast.Node) {
 		asm.Li(asm.REG_A0, node.Value)
 	case *ast.InfixExpression:
 		genCodeInfixExpression(node)
+	case *ast.PrefixExpression:
+		genCodePrefixExpression(node)
 	case *ast.Program:
 		genCodeProgram(node)
 	case *ast.ExpressionStatement:
 		GenCode(node.Expression)
 	default:
 		panic("unsupported node type")
+	}
+}
+
+func genCodePrefixExpression(node *ast.PrefixExpression) {
+	switch node.Token.Kind {
+	case token.SUB:
+		GenCode(node.Right)
+		asm.Neg(asm.REG_A0, asm.REG_A0)
+	case token.ADD:
+		GenCode(node.Right)
+		return
+	default:
+		panic("genCodePrefixExpression unsupported operator ")
 	}
 }
 

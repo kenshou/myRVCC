@@ -32,6 +32,11 @@ func Div(rd REGISTER, rs1 REGISTER, rs2 REGISTER) {
 	utils.PrintLine("	div %s,%s,%s", rd, rs1, rs2)
 }
 
+// Neg 对寄存器取反
+func Neg(rd REGISTER, rs REGISTER) {
+	utils.PrintLine("	neg %s,%s", rd, rs)
+}
+
 func Ret() {
 	utils.PrintLine("	ret")
 }
