@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"myRVCC/asm"
+	"myRVCC/lexer"
 	"myRVCC/logger"
+	"myRVCC/token"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -16,46 +18,41 @@ func main() {
 	//exp为求值的算式
 	exp := os.Args[1]
 
-	fmt.Println("	.globl main")
-	fmt.Println("main:")
-	//构建中间表达式
-	num := 0
+	asm.Globl("main")
+	asm.Label("main")
+	l := lexer.New(exp)
+	//处理第一个数字
+	tok := l.NextToken()
+	asm.Li(asm.REG_A0, getNumber(tok))
 	isNeg := false
-	//是否为第一个初始化的数字
-	is1st := true
-	for _, p := range exp {
-		switch p {
-		case '-':
-			if num != 0 {
-				printNum(num, &is1st)
-			}
-			isNeg = true
-			num = 0
-		case '+':
-			if num != 0 {
-				printNum(num, &is1st)
-			}
+l_for:
+	for {
+		tok = l.NextToken()
+		switch tok.Kind {
+		case token.EOF:
+			break l_for //跳出整个循环
+		case token.ADD:
 			isNeg = false
-			num = 0
-		default:
-			nowNum := int(p - '0')
+		case token.SUB:
+			isNeg = true
+		case token.INT:
+			num := getNumber(tok)
 			if isNeg {
-				nowNum = -nowNum
+				num = -num
 			}
-			num = num*10 + nowNum
+			asm.Addi(asm.REG_A0, asm.REG_A0, num)
 		}
 	}
-	printNum(num, &is1st)
 	asm.Ret()
 	return
 }
-
-func printNum(num int, is1st *bool) {
-	if *is1st {
-		asm.Li(asm.REG_A0, num)
-		*is1st = false
-	} else {
-		asm.Addi(asm.REG_A0, asm.REG_A0, num)
+func getNumber(tok token.Token) int {
+	if tok.Kind != token.INT {
+		logger.Panic("[%s] getNumber: token is not int", tok.Literal)
 	}
-
+	value, err := strconv.Atoi(tok.Literal)
+	if err != nil {
+		logger.Panic("[%s] getNumber: Atoi error", tok.Literal)
+	}
+	return value
 }
