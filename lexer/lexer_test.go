@@ -29,7 +29,7 @@ func TestNextToken(t *testing.T) {
 	}
 }
 func TestError(t *testing.T) {
-	l := New(";")
+	l := New("_123;1234")
 	for {
 		t := l.NextToken()
 		logger.Info("%s %s", t.Kind, t.Literal)
@@ -37,4 +37,9 @@ func TestError(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestIsIdentRune(t *testing.T) {
+	v := "123d"
+	logger.Info("%t", isIdentRune(rune(v[0]), 0))
 }

@@ -58,6 +58,15 @@ func Snez(rd REGISTER, rs1 REGISTER) {
 func Slt(rd REGISTER, rs1 REGISTER, rs2 REGISTER) {
 	utils.PrintLine("	slt %s,%s,%s", rd, rs1, rs2)
 }
+func Mv(target REGISTER, source REGISTER) {
+	utils.PrintLine("	mv %s,%s", target, source)
+}
+func Sd(valueReg REGISTER, index int, baseReg REGISTER) {
+	utils.PrintLine("	sd %s,%d(%s)", valueReg, index, baseReg)
+}
+func Ld(target REGISTER, index int, baseReg REGISTER) {
+	utils.PrintLine("	ld %s,%d(%s)", target, index, baseReg)
+}
 func Ret() {
 	utils.PrintLine("	ret")
 }

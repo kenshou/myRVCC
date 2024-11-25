@@ -12,7 +12,8 @@ const (
 	COMMENT
 	//字面量
 	literal_begin
-	INT //int整形字面量
+	IDENT //标识符/变量名/函数名
+	INT   //int整形字面量
 	literal_end
 
 	//操作符号
@@ -44,7 +45,8 @@ var tokens = [...]string{
 	EOF:     "EOF",
 	COMMENT: "COMMENT",
 
-	INT: "INT",
+	IDENT: "IDENT",
+	INT:   "INT",
 
 	ADD:    "+",
 	SUB:    "-",

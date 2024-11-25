@@ -78,6 +78,16 @@ func (il *IntegerLiteral) String() string {
 
 func (il *IntegerLiteral) expressionNode() {}
 
+// Identifier 标识符
+type Identifier struct {
+	Token token.Token // token.IDENT
+	Value string
+}
+
+func (i *Identifier) expressionNode()      {}
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
+
 // InfixExpression / 中缀表达式
 type InfixExpression struct {
 	Token    token.Token // operator当前运算符号，比如 * +

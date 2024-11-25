@@ -13,6 +13,7 @@ const (
 	//运算符优先级等级
 	_ = iota
 	LOWEST
+	ASSIGN       //赋值 =
 	EQUALS       // ==
 	LESS_GREATER // > or <
 	SUM          // + -
@@ -23,6 +24,7 @@ const (
 
 // tokenKind与运算符优先级等级的对应关系
 var precedences = map[token.TokenKind]int{
+	token.ASSIGN: ASSIGN,
 	token.ADD:    SUM,
 	token.SUB:    SUM,
 	token.MUL:    PRODUCT,
@@ -58,6 +60,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupExpression)
 	p.registerPrefix(token.SUB, p.parsePrefixExpression)
 	p.registerPrefix(token.ADD, p.parsePrefixExpression)
+	p.registerPrefix(token.IDENT, p.parseIdentifierExpression)
 
 	p.infixParseFns = make(map[token.TokenKind]infixParseFn)
 	p.registerInfix(token.ADD, p.parseInfixExpression)
@@ -70,6 +73,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LEQ, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.GEQ, p.parseInfixExpression)
+	p.registerInfix(token.ASSIGN, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -188,6 +192,11 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Left:     left,
 	}
 	precedence := p.curPrecedence()
+	//等号为右结合，所以减1
+	if p.curToken.Kind == token.ASSIGN {
+		precedence--
+	}
+
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 	return expression
@@ -217,4 +226,8 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(PREFIX)
 	return expression
+}
+
+func (p *Parser) parseIdentifierExpression() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }

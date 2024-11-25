@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"text/scanner"
+	"unicode"
 )
 
 type Lexer struct {
@@ -88,7 +89,11 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Kind = token.EOF
 		tok.Literal = ""
 	default:
-		if isDigit(ch) {
+		if isIdentRune(ch, 0) {
+			tok.Literal = l.readIdentifier()
+			tok.Kind = token.IDENT
+			return tok
+		} else if isDigit(ch) {
 			tok.Literal = l.readNumber()
 			tok.Kind = token.INT
 			return tok
@@ -109,6 +114,11 @@ func (l *Lexer) Error(pos scanner.Position, format string, arg ...interface{}) {
 	utils.VErrorAt(l.code, pos, format, arg...)
 }
 
+func (l *Lexer) readIdentifier() string {
+	l.Scanner.Scan()
+	return l.TokenText()
+}
+
 func newToken(tokenKind token.TokenKind, ch rune, position scanner.Position) token.Token {
 	return token.Token{
 		Kind:     tokenKind,
@@ -119,4 +129,9 @@ func newToken(tokenKind token.TokenKind, ch rune, position scanner.Position) tok
 
 func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+// 判断是否是标识符.i 为0时，表示第一个必须不为数字
+func isIdentRune(ch rune, i int) bool {
+	return ch == '_' || unicode.IsLetter(ch) || unicode.IsDigit(ch) && i > 0
 }

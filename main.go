@@ -1,7 +1,6 @@
 package main
 
 import (
-	"myRVCC/asm"
 	"myRVCC/code"
 	"myRVCC/lexer"
 	"myRVCC/logger"
@@ -19,15 +18,16 @@ func main() {
 	}
 	//exp为求值的算式
 	exp := os.Args[1]
+	run(exp)
+	return
+}
 
-	asm.Globl("main")
-	asm.Label("main")
+func run(exp string) {
 	l := lexer.New(exp)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	code.GenCode(program)
-	asm.Ret()
-	return
+
+	code.GenRootCode(program)
 }
 func getNumber(tok token.Token) int64 {
 	if tok.Kind != token.INT {
