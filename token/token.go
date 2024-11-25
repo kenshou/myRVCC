@@ -33,6 +33,8 @@ const (
 	RPAREN //)
 
 	ASSIGN //=
+
+	SEMICOLON //;
 	operator_end
 )
 
@@ -56,8 +58,9 @@ var tokens = [...]string{
 	GEQ:    ">=",
 	ASSIGN: "=",
 
-	LPAREN: "(",
-	RPAREN: ")",
+	LPAREN:    "(",
+	RPAREN:    ")",
+	SEMICOLON: ";",
 }
 
 func (tk TokenKind) String() string {
