@@ -69,6 +69,7 @@ func (p *Program) String() string {
 
 	for _, s := range p.Statements {
 		out.WriteString(s.String())
+		out.WriteString("\n")
 	}
 
 	return out.String()
@@ -156,5 +157,22 @@ func (pe *PrefixExpression) String() string {
 	out.WriteString(pe.Right.String())
 	out.WriteString(")")
 
+	return out.String()
+}
+
+type ReturnStatement struct {
+	Token       token.Token
+	ReturnValue Expression
+}
+
+func (rs *ReturnStatement) statementNode()       {}
+func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(rs.TokenLiteral() + " ")
+	if rs.ReturnValue != nil {
+		out.WriteString(rs.ReturnValue.String())
+	}
+	out.WriteString(";")
 	return out.String()
 }

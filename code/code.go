@@ -7,6 +7,10 @@ import (
 	"myRVCC/token"
 )
 
+const (
+	ReturnLabel = ".L.return"
+)
+
 func GenRootCode(node ast.Node) {
 	genCode(node)
 }
@@ -25,10 +29,17 @@ func genCode(node ast.Node) {
 		genCode(node.Expression)
 	case *ast.Identifier:
 		genCodeIdentifier(node)
+	case *ast.ReturnStatement:
+		genCodeReturnStatement(node)
 
 	default:
 		panic("unsupported node type")
 	}
+}
+
+func genCodeReturnStatement(node *ast.ReturnStatement) {
+	genCode(node.ReturnValue)
+	asm.J(ReturnLabel)
 }
 
 func genCodeIdentifier(node *ast.Identifier) {
@@ -75,6 +86,7 @@ func genCodeProgram(program *ast.Program) {
 	for _, statement := range program.Statements {
 		genCode(statement)
 	}
+	asm.Label(ReturnLabel)
 	//恢复栈sp
 	asm.Mv(asm.REG_SP, asm.REG_FP)
 	//将最早的fp保存的值弹栈，恢复fp的值

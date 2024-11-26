@@ -37,6 +37,10 @@ const (
 
 	SEMICOLON //;
 	operator_end
+
+	keyword_begin
+	RETURN //return
+	keyword_end
 )
 
 var tokens = [...]string{
@@ -63,8 +67,22 @@ var tokens = [...]string{
 	LPAREN:    "(",
 	RPAREN:    ")",
 	SEMICOLON: ";",
-}
 
+	RETURN: "return",
+}
+var keywords = map[string]TokenKind{}
+
+func init() {
+	for i, keyword := range tokens[keyword_begin+1 : keyword_end] {
+		keywords[keyword] = TokenKind(i + int(keyword_begin) + 1)
+	}
+}
+func LookUpIdent(ident string) TokenKind {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}
 func (tk TokenKind) String() string {
 	return tokens[tk]
 }

@@ -91,7 +91,7 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		if isIdentRune(ch, 0) {
 			tok.Literal = l.readIdentifier()
-			tok.Kind = token.IDENT
+			tok.Kind = token.LookUpIdent(tok.Literal)
 			return tok
 		} else if isDigit(ch) {
 			tok.Literal = l.readNumber()

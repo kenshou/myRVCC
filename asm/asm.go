@@ -67,6 +67,9 @@ func Sd(valueReg REGISTER, index int, baseReg REGISTER) {
 func Ld(target REGISTER, index int, baseReg REGISTER) {
 	utils.PrintLine("	ld %s,%d(%s)", target, index, baseReg)
 }
+func J(label string) {
+	utils.PrintLine("	j %s", label)
+}
 func Ret() {
 	utils.PrintLine("	ret")
 }

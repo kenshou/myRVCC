@@ -132,6 +132,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement(env *ast.Env) ast.Statement {
 	switch p.curToken.Kind {
+	case token.RETURN:
+		return p.parseReturnStatement(env)
 	default:
 		return p.parseExpressionStatement(env)
 	}
@@ -238,4 +240,14 @@ func (p *Parser) parseIdentifierExpression(env *ast.Env) ast.Expression {
 		Value: p.curToken.Literal,
 		Obj:   ident,
 	}
+}
+
+func (p *Parser) parseReturnStatement(env *ast.Env) ast.Statement {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+	p.nextToken()
+	stmt.ReturnValue = p.parseExpression(LOWEST, env)
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
 }
