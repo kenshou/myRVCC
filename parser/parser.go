@@ -117,7 +117,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	}
 	program.Statements = []ast.Statement{}
 	for p.curToken.Kind != token.EOF {
-		if p.curTokenIs(token.COMMENT) {
+		if p.curTokenIs(token.COMMENT) || p.curTokenIs(token.SEMICOLON) {
 			p.nextToken()
 			continue
 		}
@@ -262,6 +262,10 @@ func (p *Parser) parseBlockStatement(env *ast.Env) ast.Statement {
 	stmt.Statements = []ast.Statement{}
 	p.nextToken()
 	for !p.curTokenIs(token.RBRACE) {
+		if p.curTokenIs(token.COMMENT) || p.curTokenIs(token.SEMICOLON) {
+			p.nextToken()
+			continue
+		}
 		stmt.Statements = append(stmt.Statements, p.parseStatement(stmt.Env))
 		p.nextToken()
 	}
