@@ -76,6 +76,11 @@ func J(label string) {
 func Comment(format string, arg ...interface{}) {
 	utils.PrintLine("	#%s", fmt.Sprintf(format, arg...))
 }
+
+// Beqz 判断rs1结果是否为0，为0则跳转到label标签
+func Beqz(rs1 REGISTER, label string) {
+	utils.PrintLine("	beqz %s,%s", rs1, label)
+}
 func Ret() {
 	utils.PrintLine("	ret")
 }

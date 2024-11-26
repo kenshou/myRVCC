@@ -43,6 +43,8 @@ const (
 
 	keyword_begin
 	RETURN //return
+	IF
+	ELSE
 	keyword_end
 )
 
@@ -75,6 +77,8 @@ var tokens = [...]string{
 	SEMICOLON: ";",
 
 	RETURN: "return",
+	IF:     "if",
+	ELSE:   "else",
 }
 var keywords = map[string]TokenKind{}
 

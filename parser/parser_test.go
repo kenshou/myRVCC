@@ -9,7 +9,7 @@ import (
 )
 
 func TestParserString(t *testing.T) {
-	input := "{ ;;; return 5; }"
+	input := "{ if (0) { 1; 2; return 3; } else { return 4; } }"
 	p := New(lexer.New(input))
 	program := p.ParseProgram()
 	logger.Info(program.String())

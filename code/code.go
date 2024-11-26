@@ -5,11 +5,22 @@ import (
 	"myRVCC/ast"
 	"myRVCC/logger"
 	"myRVCC/token"
+	"strconv"
 )
 
 const (
 	ReturnLabel = ".L.return"
 )
+
+var (
+	//代码段计数器
+	segCount int64 = 0
+)
+
+func count() int64 {
+	segCount++
+	return segCount
+}
 
 func GenRootCode(node ast.Node) {
 	genCode(node)
@@ -34,10 +45,28 @@ func genCode(node ast.Node) {
 		genCodeReturnStatement(node)
 	case *ast.BlockStatement:
 		genCodeBlockStatement(node)
+	case *ast.IfExpression:
+		genCodeIfExpression(node)
 
 	default:
 		panic("unsupported node type")
 	}
+}
+
+func genCodeIfExpression(node *ast.IfExpression) {
+	seg := strconv.FormatInt(count(), 10)
+	//生成条件内语句
+	genCode(node.Condition)
+	//判断结果是否为0，为0时跳转到else，否则循序执行到consequence
+	asm.Beqz(asm.REG_A0, "L.else"+seg)
+	genCode(node.Consequence)
+	asm.J("L.end" + seg)
+	//生成else代码
+	asm.Label("L.else" + seg)
+	if node.Alternative != nil {
+		genCode(node.Alternative)
+	}
+	asm.Label("L.end" + seg)
 }
 
 func genCodeBlockStatement(node *ast.BlockStatement) {

@@ -61,7 +61,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.SUB, p.parsePrefixExpression)
 	p.registerPrefix(token.ADD, p.parsePrefixExpression)
 	p.registerPrefix(token.IDENT, p.parseIdentifierExpression)
-	//p.registerPrefix(token.LBRACE, p.parseBlockStatement)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	p.infixParseFns = make(map[token.TokenKind]infixParseFn)
 	p.registerInfix(token.ADD, p.parseInfixExpression)
@@ -255,7 +255,7 @@ func (p *Parser) parseReturnStatement(env *ast.Env) ast.Statement {
 	return stmt
 }
 
-func (p *Parser) parseBlockStatement(env *ast.Env) ast.Statement {
+func (p *Parser) parseBlockStatement(env *ast.Env) *ast.BlockStatement {
 	stmt := &ast.BlockStatement{Token: p.curToken}
 	//todo 暂时还不切换env
 	stmt.Env = env //ast.CreateEnv(env)
@@ -271,4 +271,26 @@ func (p *Parser) parseBlockStatement(env *ast.Env) ast.Statement {
 	}
 
 	return stmt
+}
+
+func (p *Parser) parseIfExpression(env *ast.Env) ast.Expression {
+	expression := &ast.IfExpression{Token: p.curToken}
+	if !p.expectPeek(token.LPAREN) {
+		//todo
+		logger.Panic("[%s] parseIfExpression error", p.curToken.Literal)
+	}
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST, env)
+	if !p.expectPeek(token.RPAREN) {
+		logger.Panic("[%s] parseIfExpression error", p.curToken.Literal)
+		return nil
+	}
+	p.nextToken()
+	expression.Consequence = p.parseStatement(env)
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+		p.nextToken()
+		expression.Alternative = p.parseStatement(env)
+	}
+	return expression
 }
