@@ -18,6 +18,7 @@ func GenRootCode(node ast.Node) {
 func genCode(node ast.Node) {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
+		//asm.Comment("%d", node.Value)
 		asm.Li(asm.REG_A0, node.Value)
 	case *ast.InfixExpression:
 		genCodeInfixExpression(node)
@@ -31,9 +32,17 @@ func genCode(node ast.Node) {
 		genCodeIdentifier(node)
 	case *ast.ReturnStatement:
 		genCodeReturnStatement(node)
+	case *ast.BlockStatement:
+		genCodeBlockStatement(node)
 
 	default:
 		panic("unsupported node type")
+	}
+}
+
+func genCodeBlockStatement(node *ast.BlockStatement) {
+	for _, stmt := range node.Statements {
+		genCode(stmt)
 	}
 }
 
@@ -111,6 +120,7 @@ func AlignTo(n, align int64) int64 {
 	return (n + align - 1) / align * align
 }
 func genCodeInfixExpression(node *ast.InfixExpression) {
+	asm.Comment("%s %s %s", node.Left.TokenLiteral(), node.Operator, node.Right.TokenLiteral())
 	//先递归右节点存入堆栈，再递归左节点到A0;然后弹出右节点的值到A1。
 	genCode(node.Right)
 	asm.PushA0()

@@ -61,6 +61,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.SUB, p.parsePrefixExpression)
 	p.registerPrefix(token.ADD, p.parsePrefixExpression)
 	p.registerPrefix(token.IDENT, p.parseIdentifierExpression)
+	//p.registerPrefix(token.LBRACE, p.parseBlockStatement)
 
 	p.infixParseFns = make(map[token.TokenKind]infixParseFn)
 	p.registerInfix(token.ADD, p.parseInfixExpression)
@@ -110,7 +111,7 @@ func (p *Parser) expectPeek(t token.TokenKind) bool {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	env := &ast.Env{}
+	env := ast.CreateEnv(nil)
 	program := &ast.Program{
 		Env: env,
 	}
@@ -134,6 +135,8 @@ func (p *Parser) parseStatement(env *ast.Env) ast.Statement {
 	switch p.curToken.Kind {
 	case token.RETURN:
 		return p.parseReturnStatement(env)
+	case token.LBRACE:
+		return p.parseBlockStatement(env)
 	default:
 		return p.parseExpressionStatement(env)
 	}
@@ -249,5 +252,19 @@ func (p *Parser) parseReturnStatement(env *ast.Env) ast.Statement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
+	return stmt
+}
+
+func (p *Parser) parseBlockStatement(env *ast.Env) ast.Statement {
+	stmt := &ast.BlockStatement{Token: p.curToken}
+	//todo 暂时还不切换env
+	stmt.Env = env //ast.CreateEnv(env)
+	stmt.Statements = []ast.Statement{}
+	p.nextToken()
+	for !p.curTokenIs(token.RBRACE) {
+		stmt.Statements = append(stmt.Statements, p.parseStatement(stmt.Env))
+		p.nextToken()
+	}
+
 	return stmt
 }

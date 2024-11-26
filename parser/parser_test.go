@@ -9,14 +9,14 @@ import (
 )
 
 func TestParserString(t *testing.T) {
-	input := "a=b=10;a=c+10;return a-b;"
+	input := "{a=b=10;}a=c+10;return a-b;"
 	p := New(lexer.New(input))
 	program := p.ParseProgram()
 	logger.Info(program.String())
 }
 
 func TestEnv(t *testing.T) {
-	env := ast.CreateEnv()
+	env := ast.CreateEnv(nil)
 	ident := &token.Token{
 		Kind:    token.IDENT,
 		Literal: "a",

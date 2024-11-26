@@ -17,10 +17,13 @@ type IdentifierObj struct {
 type Env struct {
 	IdentObjArr []*IdentifierObj
 	StackSize   int64
+	Parent      *Env
 }
 
-func CreateEnv() *Env {
-	return &Env{}
+func CreateEnv(parent *Env) *Env {
+	return &Env{
+		Parent: parent,
+	}
 }
 func (e *Env) FindOrCreateIdentifier(ident *token.Token) *IdentifierObj {
 	if ident.Kind != token.IDENT {
@@ -174,5 +177,21 @@ func (rs *ReturnStatement) String() string {
 		out.WriteString(rs.ReturnValue.String())
 	}
 	out.WriteString(";")
+	return out.String()
+}
+
+type BlockStatement struct {
+	Token      token.Token // {
+	Statements []Statement
+	Env        *Env
+}
+
+func (bs *BlockStatement) statementNode()       {}
+func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
 	return out.String()
 }

@@ -47,6 +47,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LPAREN, ch, position)
 	case ')':
 		tok = newToken(token.RPAREN, ch, position)
+	case '{':
+		tok = newToken(token.LBRACE, ch, position)
+	case '}':
+		tok = newToken(token.RBRACE, ch, position)
 	case '=':
 		l.Next()
 		if l.Peek() == '=' {

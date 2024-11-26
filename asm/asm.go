@@ -1,6 +1,9 @@
 package asm
 
-import "myRVCC/utils"
+import (
+	"fmt"
+	"myRVCC/utils"
+)
 
 func Globl(name string) {
 	utils.PrintLine("	.globl %s", name)
@@ -69,6 +72,9 @@ func Ld(target REGISTER, index int, baseReg REGISTER) {
 }
 func J(label string) {
 	utils.PrintLine("	j %s", label)
+}
+func Comment(format string, arg ...interface{}) {
+	utils.PrintLine("	#%s", fmt.Sprintf(format, arg...))
 }
 func Ret() {
 	utils.PrintLine("	ret")

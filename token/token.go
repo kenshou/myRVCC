@@ -31,7 +31,10 @@ const (
 	GEQ // >=
 
 	LPAREN //(
+	LBRACE //{
+
 	RPAREN //)
+	RBRACE // }
 
 	ASSIGN //=
 
@@ -64,8 +67,11 @@ var tokens = [...]string{
 	GEQ:    ">=",
 	ASSIGN: "=",
 
-	LPAREN:    "(",
+	LPAREN: "(",
+	LBRACE: "{",
+
 	RPAREN:    ")",
+	RBRACE:    "}",
 	SEMICOLON: ";",
 
 	RETURN: "return",
