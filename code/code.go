@@ -8,37 +8,7 @@ import (
 )
 
 func GenRootCode(node ast.Node) {
-	asm.Globl("main")
-	asm.Label("main")
-	// 栈布局
-	//-------------------------------// sp
-	//              fp                  fp = sp-8
-	//-------------------------------// fp
-	//              'a'                 fp-8
-	//              'b'                 fp-16
-	//              ...
-	//              'z'                 fp-208
-	//-------------------------------// sp=sp-8-208
-	//           表达式计算
-	//-------------------------------//
-
-	// 将fp压入栈中，保存fp的值
-	asm.Addi(asm.REG_SP, asm.REG_SP, -8)
-	asm.Sd(asm.REG_FP, 0, asm.REG_SP)
-	//将sp写入fp
-	asm.Mv(asm.REG_FP, asm.REG_SP)
-	//26个字母*8字节=208字节，栈腾出208字节的空间
-	asm.Addi(asm.REG_SP, asm.REG_SP, -208)
-
 	genCode(node)
-
-	//恢复栈sp
-	asm.Mv(asm.REG_SP, asm.REG_FP)
-	//将最早的fp保存的值弹栈，恢复fp的值
-	asm.Ld(asm.REG_FP, 0, asm.REG_SP)
-	asm.Addi(asm.REG_SP, asm.REG_SP, 8)
-	//返回
-	asm.Ret()
 }
 
 func genCode(node ast.Node) {
@@ -82,11 +52,52 @@ func genCodePrefixExpression(node *ast.PrefixExpression) {
 }
 
 func genCodeProgram(program *ast.Program) {
+	env := program.Env
+	AssignVarOffset(env)
+	asm.Globl("main")
+	asm.Label("main")
+	// 栈布局
+	//-------------------------------// sp
+	//              fp
+	//-------------------------------// fp = sp-8
+	//             变量
+	//-------------------------------// sp = sp-8-StackSize
+	//           表达式计算
+	//-------------------------------//
+
+	// 将fp压入栈中，保存fp的值
+	asm.Addi(asm.REG_SP, asm.REG_SP, -8)
+	asm.Sd(asm.REG_FP, 0, asm.REG_SP)
+	//将sp写入fp
+	asm.Mv(asm.REG_FP, asm.REG_SP)
+	//26个字母*8字节=208字节，栈腾出208字节的空间
+	asm.Addi(asm.REG_SP, asm.REG_SP, -env.StackSize)
 	for _, statement := range program.Statements {
 		genCode(statement)
 	}
+	//恢复栈sp
+	asm.Mv(asm.REG_SP, asm.REG_FP)
+	//将最早的fp保存的值弹栈，恢复fp的值
+	asm.Ld(asm.REG_FP, 0, asm.REG_SP)
+	asm.Addi(asm.REG_SP, asm.REG_SP, 8)
+	//返回
+	asm.Ret()
 }
 
+func AssignVarOffset(env *ast.Env) {
+	offset := int64(0)
+	for _, obj := range env.IdentObjArr {
+		// 每个变量分配8字节
+		offset += 8
+		// 为每个变量赋一个偏移量，或者说是栈中地址
+		obj.Offset = -offset
+	}
+	// 将栈对齐到16字节
+	env.StackSize = AlignTo(offset, 16)
+}
+func AlignTo(n, align int64) int64 {
+	return (n + align - 1) / align * align
+}
 func genCodeInfixExpression(node *ast.InfixExpression) {
 	//先递归右节点存入堆栈，再递归左节点到A0;然后弹出右节点的值到A1。
 	genCode(node.Right)
@@ -145,9 +156,8 @@ func genCodeAssign(node *ast.InfixExpression) {
 
 func genAddress(identifier *ast.Identifier) {
 	if identifier.Token.Kind == token.IDENT {
-		//todo 暂时只支持一个字母
-		offset := (identifier.Value[0] - 'a' + 1) * 8
-		asm.Addi(asm.REG_A0, asm.REG_FP, int64(-offset))
+		offset := identifier.Obj.Offset
+		asm.Addi(asm.REG_A0, asm.REG_FP, offset)
 	} else {
 		logger.Panic("unsupported operator %+v", identifier)
 	}

@@ -2,12 +2,40 @@ package ast
 
 import (
 	"bytes"
+	"myRVCC/logger"
 	"myRVCC/token"
 )
 
 type Node interface {
 	TokenLiteral() string
 	String() string
+}
+type IdentifierObj struct {
+	Value  string //变量名
+	Offset int64  //fp的偏移量
+}
+type Env struct {
+	IdentObjArr []*IdentifierObj
+	StackSize   int64
+}
+
+func CreateEnv() *Env {
+	return &Env{}
+}
+func (e *Env) FindOrCreateIdentifier(ident *token.Token) *IdentifierObj {
+	if ident.Kind != token.IDENT {
+		logger.Panic("[%s] FindOrCreateIdentifier: token is not int", ident.Literal)
+	}
+	for _, obj := range e.IdentObjArr {
+		if obj.Value == ident.Literal {
+			return obj
+		}
+	}
+	obj := &IdentifierObj{
+		Value: ident.Literal,
+	}
+	e.IdentObjArr = append(e.IdentObjArr, obj)
+	return obj
 }
 
 // Statement 语句
@@ -24,6 +52,7 @@ type Expression interface {
 
 // Program 程序
 type Program struct {
+	Env        *Env
 	Statements []Statement
 }
 
@@ -82,6 +111,7 @@ func (il *IntegerLiteral) expressionNode() {}
 type Identifier struct {
 	Token token.Token // token.IDENT
 	Value string
+	Obj   *IdentifierObj
 }
 
 func (i *Identifier) expressionNode()      {}

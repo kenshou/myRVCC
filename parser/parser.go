@@ -39,8 +39,8 @@ var precedences = map[token.TokenKind]int{
 }
 
 type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func(ast.Expression) ast.Expression
+	prefixParseFn func(env *ast.Env) ast.Expression
+	infixParseFn  func(ast.Expression, *ast.Env) ast.Expression
 )
 
 type Parser struct {
@@ -110,7 +110,10 @@ func (p *Parser) expectPeek(t token.TokenKind) bool {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
-	program := &ast.Program{}
+	env := &ast.Env{}
+	program := &ast.Program{
+		Env: env,
+	}
 	program.Statements = []ast.Statement{}
 	for p.curToken.Kind != token.EOF {
 		if p.curTokenIs(token.COMMENT) {
@@ -118,7 +121,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 			continue
 		}
 
-		stmt := p.parseStatement()
+		stmt := p.parseStatement(env)
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt)
 		}
@@ -127,37 +130,37 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
-func (p *Parser) parseStatement() ast.Statement {
+func (p *Parser) parseStatement(env *ast.Env) ast.Statement {
 	switch p.curToken.Kind {
 	default:
-		return p.parseExpressionStatement()
+		return p.parseExpressionStatement(env)
 	}
 }
 
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+func (p *Parser) parseExpressionStatement(env *ast.Env) *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
+	stmt.Expression = p.parseExpression(LOWEST, env)
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 	return stmt
 }
 
-func (p *Parser) parseExpression(precedence int) ast.Expression {
+func (p *Parser) parseExpression(precedence int, env *ast.Env) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Kind]
 	if prefix == nil {
 		//todo
 		logger.Panic("no prefix parse function for %s found", p.curToken.Kind)
 		return nil
 	}
-	leftExp := prefix()
+	leftExp := prefix(env)
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Kind]
 		if infix == nil {
 			return leftExp
 		}
 		p.nextToken()
-		leftExp = infix(leftExp)
+		leftExp = infix(leftExp, env)
 	}
 	return leftExp
 }
@@ -169,7 +172,7 @@ func (p *Parser) peekPrecedence() int {
 	return LOWEST
 }
 
-func (p *Parser) parseIntegerLiteral() ast.Expression {
+func (p *Parser) parseIntegerLiteral(env *ast.Env) ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
@@ -185,7 +188,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return lit
 }
 
-func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+func (p *Parser) parseInfixExpression(left ast.Expression, env *ast.Env) ast.Expression {
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -198,7 +201,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	}
 
 	p.nextToken()
-	expression.Right = p.parseExpression(precedence)
+	expression.Right = p.parseExpression(precedence, env)
 	return expression
 }
 
@@ -209,25 +212,30 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
-func (p *Parser) parseGroupExpression() ast.Expression {
+func (p *Parser) parseGroupExpression(env *ast.Env) ast.Expression {
 	p.nextToken()
-	exp := p.parseExpression(LOWEST)
+	exp := p.parseExpression(LOWEST, env)
 	if !p.expectPeek(token.RPAREN) {
 		return nil
 	}
 	return exp
 }
 
-func (p *Parser) parsePrefixExpression() ast.Expression {
+func (p *Parser) parsePrefixExpression(env *ast.Env) ast.Expression {
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
 	}
 	p.nextToken()
-	expression.Right = p.parseExpression(PREFIX)
+	expression.Right = p.parseExpression(PREFIX, env)
 	return expression
 }
 
-func (p *Parser) parseIdentifierExpression() ast.Expression {
-	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+func (p *Parser) parseIdentifierExpression(env *ast.Env) ast.Expression {
+	ident := env.FindOrCreateIdentifier(&p.curToken)
+	return &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+		Obj:   ident,
+	}
 }
