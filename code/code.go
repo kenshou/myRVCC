@@ -47,10 +47,30 @@ func genCode(node ast.Node) {
 		genCodeBlockStatement(node)
 	case *ast.IfExpression:
 		genCodeIfExpression(node)
+	case *ast.ForStatement:
+		genCodeForStatement(node)
 
 	default:
 		panic("unsupported node type")
 	}
+}
+
+func genCodeForStatement(node *ast.ForStatement) {
+	seg := strconv.FormatInt(count(), 10)
+	if node.InitExpr != nil {
+		genCode(node.InitExpr)
+	}
+	asm.Label("L.for_begin_" + seg)
+	if node.Condition != nil {
+		genCode(node.Condition)
+		asm.Beqz(asm.REG_A0, "L.for_end_"+seg)
+	}
+	genCode(node.Consequence)
+	if node.Inc != nil {
+		genCode(node.Inc)
+	}
+	asm.J("L.for_begin_" + seg)
+	asm.Label("L.for_end_" + seg)
 }
 
 func genCodeIfExpression(node *ast.IfExpression) {

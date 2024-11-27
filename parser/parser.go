@@ -137,6 +137,8 @@ func (p *Parser) parseStatement(env *ast.Env) ast.Statement {
 		return p.parseReturnStatement(env)
 	case token.LBRACE:
 		return p.parseBlockStatement(env)
+	case token.FOR:
+		return p.parseForStatement(env)
 	default:
 		return p.parseExpressionStatement(env)
 	}
@@ -293,4 +295,40 @@ func (p *Parser) parseIfExpression(env *ast.Env) ast.Expression {
 		expression.Alternative = p.parseStatement(env)
 	}
 	return expression
+}
+
+func (p *Parser) parseForStatement(env *ast.Env) ast.Statement {
+	stmt := &ast.ForStatement{Token: p.curToken}
+	if !p.expectPeek(token.LPAREN) {
+		//todo
+		logger.Panic("[%s] parseForStatement error", p.curToken.Literal)
+	}
+	p.nextToken()
+	if !p.curTokenIs(token.SEMICOLON) {
+		stmt.InitExpr = p.parseExpression(LOWEST, env)
+		if !p.expectPeek(token.SEMICOLON) {
+			logger.Panic("[%s] parseForStatement error", p.curToken.Literal)
+			return nil
+		}
+	}
+	p.nextToken()
+	if !p.curTokenIs(token.SEMICOLON) {
+		stmt.Condition = p.parseExpression(LOWEST, env)
+		if !p.expectPeek(token.SEMICOLON) {
+			logger.Panic("[%s] parseForStatement error", p.curToken.Literal)
+			return nil
+		}
+	}
+	p.nextToken()
+	if !p.curTokenIs(token.RPAREN) {
+		stmt.Inc = p.parseExpression(LOWEST, env)
+
+		if !p.expectPeek(token.RPAREN) {
+			logger.Panic("[%s] parseForStatement error", p.curToken.Literal)
+			return nil
+		}
+	}
+	p.nextToken()
+	stmt.Consequence = p.parseStatement(env)
+	return stmt
 }

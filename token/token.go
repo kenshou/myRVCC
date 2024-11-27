@@ -45,6 +45,7 @@ const (
 	RETURN //return
 	IF
 	ELSE
+	FOR
 	keyword_end
 )
 
@@ -79,6 +80,7 @@ var tokens = [...]string{
 	RETURN: "return",
 	IF:     "if",
 	ELSE:   "else",
+	FOR:    "for",
 }
 var keywords = map[string]TokenKind{}
 

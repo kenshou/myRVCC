@@ -217,3 +217,34 @@ func (ie *IfExpression) String() string {
 	}
 	return out.String()
 }
+
+type ForStatement struct {
+	Token       token.Token
+	InitExpr    Expression //初始化语句
+	Condition   Expression //判断语句
+	Inc         Expression //增量语句
+	Consequence Statement  //循环体
+}
+
+func (f *ForStatement) TokenLiteral() string { return f.Token.Literal }
+
+func (f *ForStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("for (")
+	if f.InitExpr != nil {
+		out.WriteString(f.InitExpr.String())
+	}
+	out.WriteString("; ")
+	if f.Condition != nil {
+		out.WriteString(f.Condition.String())
+	}
+	out.WriteString("; ")
+	if f.Inc != nil {
+		out.WriteString(f.Inc.String())
+	}
+	out.WriteString(") ")
+	out.WriteString(f.Consequence.String())
+	return out.String()
+}
+
+func (f *ForStatement) statementNode() {}
