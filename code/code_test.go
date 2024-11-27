@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenCode(t *testing.T) {
-	l := lexer.New("for(a=1;a<10;a=a+1){return 0;}")
+	l := lexer.New("{ i=0; while(i<10) { i=i+1; } return i; }")
 	p := parser.New(l)
 	program := p.ParseProgram()
 	genCode(program)

@@ -9,7 +9,7 @@ import (
 )
 
 func TestParserString(t *testing.T) {
-	input := "for(a;b;c){return 10;}"
+	input := "{i=0;while(0){i=i+1;}"
 	p := New(lexer.New(input))
 	program := p.ParseProgram()
 	logger.Info(program.String())

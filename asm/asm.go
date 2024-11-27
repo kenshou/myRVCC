@@ -74,7 +74,7 @@ func J(label string) {
 	utils.PrintLine("	j %s", label)
 }
 func Comment(format string, arg ...interface{}) {
-	utils.PrintLine("	#%s", fmt.Sprintf(format, arg...))
+	utils.PrintLine("	# %s", fmt.Sprintf(format, arg...))
 }
 
 // Beqz 判断rs1结果是否为0，为0则跳转到label标签
@@ -90,12 +90,14 @@ func Ret() {
 // 当前栈指针的地址就是sp，将a0的值压入栈
 // 不使用寄存器存储的原因是因为需要存储的值的数量是变化的。
 func PushA0() {
+	Comment("压栈，将a0的值存入栈顶，push a0")
 	Addi(REG_SP, REG_SP, -8)
 	utils.PrintLine("	sd a0,0(sp)")
 }
 
 // Pop 弹栈，将sp指向的地址的值，弹出到a1
 func Pop(reg REGISTER) {
+	Comment("弹栈，将栈顶的值弹出到%s", reg)
 	utils.PrintLine("	ld %s,0(sp)", reg)
 	Addi(REG_SP, REG_SP, 8)
 }

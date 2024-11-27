@@ -248,3 +248,20 @@ func (f *ForStatement) String() string {
 }
 
 func (f *ForStatement) statementNode() {}
+
+type WhileStatement struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence Statement
+}
+
+func (w *WhileStatement) TokenLiteral() string { return w.Token.Literal }
+func (w *WhileStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("while (")
+	out.WriteString(w.Condition.String())
+	out.WriteString(") ")
+	out.WriteString(w.Consequence.String())
+	return out.String()
+}
+func (w *WhileStatement) statementNode() {}

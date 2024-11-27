@@ -46,6 +46,7 @@ const (
 	IF
 	ELSE
 	FOR
+	WHILE
 	keyword_end
 )
 
@@ -81,6 +82,7 @@ var tokens = [...]string{
 	IF:     "if",
 	ELSE:   "else",
 	FOR:    "for",
+	WHILE:  "while",
 }
 var keywords = map[string]TokenKind{}
 

@@ -139,6 +139,8 @@ func (p *Parser) parseStatement(env *ast.Env) ast.Statement {
 		return p.parseBlockStatement(env)
 	case token.FOR:
 		return p.parseForStatement(env)
+	case token.WHILE:
+		return p.parseWhileStatement(env)
 	default:
 		return p.parseExpressionStatement(env)
 	}
@@ -263,7 +265,7 @@ func (p *Parser) parseBlockStatement(env *ast.Env) *ast.BlockStatement {
 	stmt.Env = env //ast.CreateEnv(env)
 	stmt.Statements = []ast.Statement{}
 	p.nextToken()
-	for !p.curTokenIs(token.RBRACE) {
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		if p.curTokenIs(token.COMMENT) || p.curTokenIs(token.SEMICOLON) {
 			p.nextToken()
 			continue
@@ -327,6 +329,21 @@ func (p *Parser) parseForStatement(env *ast.Env) ast.Statement {
 			logger.Panic("[%s] parseForStatement error", p.curToken.Literal)
 			return nil
 		}
+	}
+	p.nextToken()
+	stmt.Consequence = p.parseStatement(env)
+	return stmt
+}
+
+func (p *Parser) parseWhileStatement(env *ast.Env) ast.Statement {
+	stmt := &ast.WhileStatement{Token: p.curToken}
+	if !p.expectPeek(token.LPAREN) {
+		logger.Panic("[%s] parseWhileStatement error", p.curToken.Literal)
+	}
+	p.nextToken()
+	stmt.Condition = p.parseExpression(LOWEST, env)
+	if !p.expectPeek(token.RPAREN) {
+		logger.Panic("[%s] parseWhileStatement error", p.curToken.Literal)
 	}
 	p.nextToken()
 	stmt.Consequence = p.parseStatement(env)
