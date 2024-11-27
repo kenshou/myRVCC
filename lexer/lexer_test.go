@@ -19,7 +19,7 @@ func TestScanNext(t *testing.T) {
 	}
 }
 func TestNextToken(t *testing.T) {
-	l := New("{1;};1 + 2 - 33+55;return;a=5")
+	l := New("{ x=3; return *&x; }")
 	for {
 		t := l.NextToken()
 		logger.Info("%s %s", t.Kind, t.Literal)

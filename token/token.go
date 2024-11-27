@@ -39,6 +39,7 @@ const (
 	ASSIGN //=
 
 	SEMICOLON //;
+	AMPERSAND // &
 	operator_end
 
 	keyword_begin
@@ -77,6 +78,7 @@ var tokens = [...]string{
 	RPAREN:    ")",
 	RBRACE:    "}",
 	SEMICOLON: ";",
+	AMPERSAND: "&",
 
 	RETURN: "return",
 	IF:     "if",

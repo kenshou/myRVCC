@@ -11,3 +11,7 @@ brew install riscv-isa-sim
 
 riscv64-unknown-elf-gcc -static tmp.s -o tmp  
 spike pk tmp
+
+------
+# 重大bug
+1. 赋值运算符的实现，在“[10] 支持单字母本地变量”产生，在"[20] 支持一元& *运算符"才发现修复

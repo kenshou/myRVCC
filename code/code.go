@@ -113,9 +113,10 @@ func genCodeIfExpression(node *ast.IfExpression) {
 	asm.Comment("跳转到分支%s的.L.end.%s段", seg, seg)
 	asm.J("L.end" + seg)
 	//生成else代码
+	asm.Label("L.else" + seg)
 	if node.Alternative != nil {
 		asm.Comment("Else语句%s", seg)
-		asm.Label("L.else" + seg)
+
 		genCode(node.Alternative)
 	}
 	asm.Comment("分支%s的.L.end.%s段标签", seg, seg)
@@ -137,7 +138,7 @@ func genCodeIdentifier(node *ast.Identifier) {
 	// 计算出变量的地址，然后存入a0
 	genAddress(node)
 	// 访问a0地址中存储的数据，存入到a0当中
-	asm.Comment("读取a0中存放的地址，得到的值存入a0")
+	asm.Comment("读取a0地址的值存入a0")
 	asm.Ld(asm.REG_A0, 0, asm.REG_A0)
 }
 
@@ -150,6 +151,16 @@ func genCodePrefixExpression(node *ast.PrefixExpression) {
 	case token.ADD:
 		genCode(node.Right)
 		return
+	case token.MUL:
+		//解引用
+		genCode(node.Right)
+		asm.Comment("解引用,读取a0中存放的地址，得到的值存入a0")
+		asm.Ld(asm.REG_A0, 0, asm.REG_A0)
+	case token.AMPERSAND:
+		//取地址
+		asm.Comment("取地址")
+		r := node.Right.(*ast.Identifier)
+		genAddress(r)
 	default:
 		panic("genCodePrefixExpression unsupported operator ")
 	}
@@ -191,12 +202,15 @@ func genCodeProgram(program *ast.Program) {
 
 func AssignVarOffset(env *ast.Env) {
 	offset := int64(0)
-	for _, obj := range env.IdentObjArr {
+	//因为教程中是反向的，所以倒序遍历
+	for i := len(env.IdentObjArr) - 1; i >= 0; i-- {
+		obj := env.IdentObjArr[i]
 		// 每个变量分配8字节
 		offset += 8
 		// 为每个变量赋一个偏移量，或者说是栈中地址
 		obj.Offset = -offset
 	}
+
 	// 将栈对齐到16字节
 	env.StackSize = AlignTo(offset, 16)
 }
@@ -205,51 +219,57 @@ func AlignTo(n, align int64) int64 {
 }
 func genCodeInfixExpression(node *ast.InfixExpression) {
 	asm.Comment("%s %s %s", node.Left.TokenLiteral(), node.Operator, node.Right.TokenLiteral())
-	//先递归右节点存入堆栈，再递归左节点到A0;然后弹出右节点的值到A1。
-	genCode(node.Right)
-	asm.PushA0()
-	genCode(node.Left)
-	asm.Pop(asm.REG_A1)
-	switch node.Token.Kind {
-	case token.ADD:
-		asm.Comment("a0+a1，结果写入a0")
-		asm.Add(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-	case token.SUB:
-		asm.Comment("a0-a1，结果写入a0")
-		asm.Sub(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-	case token.MUL:
-		asm.Comment("a0*a1，结果写入a0")
-		asm.Multi(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-	case token.DIV:
-		asm.Comment("a0/a1，结果写入a0")
-		asm.Div(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-	case token.EQ:
-		asm.Comment("a0==a1，结果写入a0")
-		asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-		asm.Seqz(asm.REG_A0, asm.REG_A0)
-	case token.NEQ:
-		asm.Comment("a0!=a1，结果写入a0")
-		asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-		asm.Snez(asm.REG_A0, asm.REG_A0)
-	case token.LT:
-		asm.Comment("a0<a1，结果写入a0")
-		asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-	case token.LEQ:
-		asm.Comment("a0<=a1，结果写入a0")
-		asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
-		asm.Xori(asm.REG_A0, asm.REG_A0, 1)
-	case token.GT:
-		asm.Comment("a0>a1，结果写入a0")
-		asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
-	case token.GEQ:
-		asm.Comment("a0>=a1，结果写入a0")
-		asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
-		asm.Xori(asm.REG_A0, asm.REG_A0, 1)
-	case token.ASSIGN:
+	kind := node.Token.Kind
+	if kind == token.ASSIGN {
 		genCodeAssign(node)
-	default:
-		panic("unsupported operator")
+		//asm.Sd(asm.REG_A0, 0, asm.REG_A1)
+	} else {
+		//先递归右节点存入堆栈，再递归左节点到A0;然后弹出右节点的值到A1。
+		genCode(node.Right)
+		asm.PushA0()
+		genCode(node.Left)
+		asm.Pop(asm.REG_A1)
+		switch kind {
+		case token.ADD:
+			asm.Comment("a0+a1，结果写入a0")
+			asm.Add(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		case token.SUB:
+			asm.Comment("a0-a1，结果写入a0")
+			asm.Sub(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		case token.MUL:
+			asm.Comment("a0*a1，结果写入a0")
+			asm.Multi(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		case token.DIV:
+			asm.Comment("a0/a1，结果写入a0")
+			asm.Div(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		case token.EQ:
+			asm.Comment("a0==a1，结果写入a0")
+			asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+			asm.Seqz(asm.REG_A0, asm.REG_A0)
+		case token.NEQ:
+			asm.Comment("a0!=a1，结果写入a0")
+			asm.Xor(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+			asm.Snez(asm.REG_A0, asm.REG_A0)
+		case token.LT:
+			asm.Comment("a0<a1，结果写入a0")
+			asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+		case token.LEQ:
+			asm.Comment("a0<=a1，结果写入a0")
+			asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
+			asm.Xori(asm.REG_A0, asm.REG_A0, 1)
+		case token.GT:
+			asm.Comment("a0>a1，结果写入a0")
+			asm.Slt(asm.REG_A0, asm.REG_A1, asm.REG_A0)
+		case token.GEQ:
+			asm.Comment("a0>=a1，结果写入a0")
+			asm.Slt(asm.REG_A0, asm.REG_A0, asm.REG_A1)
+			asm.Xori(asm.REG_A0, asm.REG_A0, 1)
+
+		default:
+			panic("unsupported operator")
+		}
 	}
+
 }
 
 func genCodeAssign(node *ast.InfixExpression) {
@@ -257,15 +277,21 @@ func genCodeAssign(node *ast.InfixExpression) {
 		left, ok := node.Left.(*ast.Identifier)
 		if ok {
 			genAddress(left)
-			asm.PushA0()
-			genCode(node.Right)
-			asm.Pop(asm.REG_A1)
-			asm.Comment("将a0的值，写入到a1中存放的地址")
-			asm.Sd(asm.REG_A0, 0, asm.REG_A1)
-			return
 		} else {
-			logger.Panic("genCodeAssign:unsupported operator %+v", node)
+			//看是否为*指针
+			nodePre, ok := node.Left.(*ast.PrefixExpression)
+			if ok && nodePre.Token.Kind == token.MUL {
+				genCode(nodePre.Right)
+			} else {
+				logger.Panic("不是变量也不是指针解引用 genCodeAssign:unsupported operator %+v", node)
+			}
 		}
+		asm.PushA0()
+		genCode(node.Right)
+		asm.Pop(asm.REG_A1)
+		asm.Comment("将a0的值，写入到a1中存放的地址")
+		asm.Sd(asm.REG_A0, 0, asm.REG_A1)
+		return
 	} else {
 		logger.Panic("genCodeAssign:unsupported operator %+v", node)
 	}
